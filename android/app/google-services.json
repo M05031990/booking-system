@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "825046609125",
+    "project_id": "booking-system-9daef",
+    "storage_bucket": "booking-system-9daef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825046609125:android:cba2ae493a84bdec31780c",
+        "android_client_info": {
+          "package_name": "com.mdq.ride_booking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnWSPlKkidi9XBleDYOOt6bN6qtlBHOAw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

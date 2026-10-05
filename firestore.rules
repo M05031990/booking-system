@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function role() {
+      return get(/databases/$(database)/documents/users/$(me())).data.role;
+    }
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow create: if signedIn() && uid == me()
+        && request.resource.data.role in ['customer', 'rider'];
+      allow update: if signedIn() && uid == me()
+        && request.resource.data.role == resource.data.role;
+    }
+
+    match /bookings/{id} {
+      allow read: if signedIn();
+
+      allow create: if signedIn() && role() == 'customer'
+        && request.resource.data.customerId == me()
+        && request.resource.data.status == 'waiting'
+        && request.resource.data.riderId == null;
+
+      // A rider grabbing an open booking.
+      allow update: if signedIn() && role() == 'rider'
+        && resource.data.status == 'waiting'
+        && request.resource.data.status == 'going'
+        && request.resource.data.riderId == me()
+        && onlyChanges(['riderId', 'riderName', 'status', 'riderLocation', 'acceptedAt']);
+
+      // The assigned rider moving the trip along and sharing location.
+      allow update: if signedIn() && resource.data.riderId == me()
+        && onlyChanges(['status', 'riderLocation', 'pickedUpAt', 'startedAt', 'arrivedAt']);
+
+      // The customer sharing location, or cancelling before anyone accepts.
+      allow update: if signedIn() && resource.data.customerId == me()
+        && (onlyChanges(['customerLocation'])
+          || (resource.data.status == 'waiting'
+              && request.resource.data.status == 'cancelled'
+              && onlyChanges(['status', 'cancelledAt'])));
+    }
+  }
+}
